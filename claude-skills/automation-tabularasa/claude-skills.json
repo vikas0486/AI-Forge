@@ -1,0 +1,14 @@
+{
+  "skills": [
+    {
+      "name": "automation-tabularasa",
+      "description": "Domain affinity management — Tabula Rasa (full recalculation) and Rebalance (incremental) operations across EU/US/APAC/US3/GCP-TEF. Ansible playbook execution, SQL backup/rollback, Jenkins pipeline.",
+      "prompts": [
+        "Run tabula rasa affinity recalculation",
+        "Rebalance domain affinity for a region",
+        "Check affinity distribution across datanodes",
+        "Rollback affinity SQL changes"
+      ]
+    }
+  ]
+}

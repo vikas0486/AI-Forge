@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: misp-config
+  namespace: misp-prod
+  labels:
+    app: misp
+data:
+  # MISP Configuration
+  MISP_BASEURL: "https://misp.internal.devo.com"
+  MISP_ORG: "Devo"
+  MISP_MODULE_URL: "http://misp-modules:6666"
+
+  # MySQL Configuration
+  MYSQL_HOST: "mysql-service"
+  MYSQL_PORT: "3306"
+  MYSQL_DATABASE: "misp"
+  MYSQL_USER: "misp"
+
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+
+  # MISP Settings
+  MISP_TIMEZONE: "UTC"
+  MISP_PYTHON_VERSION: "3.11"
+  MISP_PHP_MEMORY_LIMIT: "512M"
+  MISP_PHP_MAX_EXECUTION_TIME: "300"
+
+  # Background Workers
+  MISP_WORKERS_COUNT: "4"
+  MISP_WORKERS_DEFAULT: "1"
+  MISP_WORKERS_EMAIL: "1"
+  MISP_WORKERS_CACHE: "1"
+  MISP_WORKERS_PRIO: "1"
+
+  # Lookup Generation Settings
+  LOOKUP_NAME: "mispIndicator"
+  LOOKUP_SCHEDULE: "0 0 * * *"  # Daily at 00:00 UTC
+  LAST_DAYS: "30"  # Download events from last 30 days
+
+  # Logging
+  LOG_LEVEL: "INFO"
+  ENABLE_DEBUG: "false"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-config
+  namespace: misp-prod
+  labels:
+    app: mysql
+data:
+  init-misp-db.sql: |
+    CREATE DATABASE IF NOT EXISTS misp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'misp'@'%' IDENTIFIED BY '${MYSQL_MISP_PASSWORD}';
+    GRANT ALL PRIVILEGES ON misp.* TO 'misp'@'%';
+    FLUSH PRIVILEGES;

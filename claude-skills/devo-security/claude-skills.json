@@ -1,0 +1,14 @@
+{
+  "skills": [
+    {
+      "name": "devo-security",
+      "description": "HashiCorp/OpenBao Vault — credentials access, KV secret paths, region endpoints (EU/US/US3/APAC/NCSC), Kubernetes contexts for Vault operations.",
+      "prompts": [
+        "Retrieve a secret from Vault (EU/US/US3/APAC/NCSC)",
+        "Access OpenBao DevTools credentials",
+        "Manage KV secret paths in Vault",
+        "Troubleshoot Vault authentication or token issues"
+      ]
+    }
+  ]
+}

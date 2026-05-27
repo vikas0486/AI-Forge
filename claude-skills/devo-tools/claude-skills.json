@@ -1,0 +1,16 @@
+{
+  "skills": [
+    {
+      "name": "devo-tools",
+      "description": "Query and monitor Devo platform using Maqui (LINQ) query language. Comprehensive production query reference for infrastructure monitoring (Mason, Malote, Metamalote, Batrasio, Lomana), ingestion tracking, performance analysis, and affinity management. Multi-region support (EU, APAC, US, US3, Telefonica, San, NCSC-Bahrain).",
+      "prompts": [
+        "Execute Maqui queries against Devo platform (Web UI, CLI, or API)",
+        "Monitor infrastructure (Mason agent, Malote, Metamalote, Batrasio)",
+        "Check ingestion stats and table deployment status",
+        "Manage domain affinity and trunk configuration (MySQL)",
+        "Troubleshoot connection issues, GC pauses, and errors",
+        "Access 50+ production query examples organized by category"
+      ]
+    }
+  ]
+}

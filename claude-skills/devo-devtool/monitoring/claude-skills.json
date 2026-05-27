@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "monitoring",
+      "description": "Comprehensive Grafana, Prometheus & Alertmanager operations for Devo monitoring infrastructure. Includes: creating/managing alert silences across multiple clusters, troubleshooting 'silence not working' scenarios, handling in-flight alerts, multi-cluster silence deployment, verifying silence effectiveness, understanding alert timing, dealing with external Grafana instances, alert name variants, and complete Prometheus/Alertmanager troubleshooting. Use for: viewing dashboards, creating alert silences, checking metrics, multi-cluster operations, debugging alert delivery issues.",
+      "instructionsFile": "SKILL.md"
+    }
+  ]
+}

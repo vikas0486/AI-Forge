@@ -1,0 +1,36 @@
+name: soar
+description: |
+  Devo SOAR (LogicHub) platform management, internal repositories, team contacts,
+  and integration troubleshooting. Covers native Devo integration and external SOAR
+  platforms (Cortex XSOAR) with known issues and fixes.
+
+trigger_patterns:
+  - "soar"
+  - "logichub"
+  - "xsoar"
+  - "cortex xsoar"
+  - "palo alto xsoar"
+  - "alert integration"
+  - "duplicate alerts"
+  - "soar team"
+  - "soar platform"
+
+version: 1.0.0
+author: Vikash Jaiswal
+created: 2026-04-13
+last_updated: 2026-04-13
+
+tags:
+  - soar
+  - logichub
+  - security
+  - automation
+  - orchestration
+  - integration
+  - alerts
+  - xsoar
+
+related_skills:
+  - devo-tools
+  - jira-platform
+  - devo-infra

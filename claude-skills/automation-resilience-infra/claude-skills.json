@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "automation-resilience-infra",
+      "description": "Deploy and manage auto-healing resilience infrastructure (health-check agents) to datanodes, metamalotes, and batrasios. Smart port mapping, service monitoring, automatic restart logic, and counter reset. Use for deploying health-check agents and troubleshooting auto-healing issues.",
+      "invoke_commands": ["/automation-resilience-infra"]
+    }
+  ]
+}

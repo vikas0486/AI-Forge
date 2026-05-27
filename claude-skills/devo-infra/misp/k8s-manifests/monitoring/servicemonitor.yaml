@@ -1,0 +1,178 @@
+---
+# Prometheus ServiceMonitor for MISP metrics collection
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: misp-metrics
+  namespace: misp-prod
+  labels:
+    app: misp-server
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: misp-server
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - misp-prod
+
+---
+# MySQL Exporter Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-exporter
+  namespace: misp-prod
+  labels:
+    app: mysql-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-exporter
+  template:
+    metadata:
+      labels:
+        app: mysql-exporter
+    spec:
+      containers:
+      - name: mysql-exporter
+        image: prom/mysqld-exporter:v0.15.0
+        args:
+        - "--mysqld.address=mysql-service:3306"
+        - "--mysqld.username=exporter"
+        env:
+        - name: DATA_SOURCE_NAME
+          value: "exporter:EXPORTER_PASSWORD@(mysql-service:3306)/"
+        ports:
+        - containerPort: 9104
+          name: metrics
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+# MySQL Exporter Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-exporter
+  namespace: misp-prod
+  labels:
+    app: mysql-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9104
+    targetPort: 9104
+    protocol: TCP
+    name: metrics
+  selector:
+    app: mysql-exporter
+
+---
+# MySQL Exporter ServiceMonitor
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mysql-metrics
+  namespace: misp-prod
+  labels:
+    app: mysql-exporter
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: mysql-exporter
+  endpoints:
+  - port: metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - misp-prod
+
+---
+# Redis Exporter Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: misp-prod
+  labels:
+    app: redis-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+      - name: redis-exporter
+        image: oliver006/redis_exporter:v1.55.0
+        args:
+        - "--redis.addr=redis://redis-service:6379"
+        ports:
+        - containerPort: 9121
+          name: metrics
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+# Redis Exporter Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: misp-prod
+  labels:
+    app: redis-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9121
+    targetPort: 9121
+    protocol: TCP
+    name: metrics
+  selector:
+    app: redis-exporter
+
+---
+# Redis Exporter ServiceMonitor
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-metrics
+  namespace: misp-prod
+  labels:
+    app: redis-exporter
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: redis-exporter
+  endpoints:
+  - port: metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - misp-prod

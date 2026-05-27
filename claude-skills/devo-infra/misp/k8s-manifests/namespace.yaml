@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: misp-prod
+  labels:
+    name: misp-prod
+    environment: production
+    app: misp
+    managed-by: platform-engineering

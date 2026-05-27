@@ -1,0 +1,14 @@
+{
+  "skills": [
+    {
+      "name": "automation-offboarding",
+      "description": "Customer offboarding automation — Probio API admin user creation, reseller vs domain credential handling, multi-region (EU/US/APAC/SANT). For delegation tree removal use stop-delete on installation table.",
+      "prompts": [
+        "Offboard a customer domain or reseller",
+        "Create admin user via Probio API",
+        "Handle reseller sub-domain offboarding",
+        "Check offboarding status across regions"
+      ]
+    }
+  ]
+}

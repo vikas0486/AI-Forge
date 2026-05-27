@@ -1,0 +1,48 @@
+---
+# MISP Server Service (LoadBalancer for external access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: misp-server
+  namespace: misp-prod
+  labels:
+    app: misp-server
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: misp-server
+
+---
+# MISP Server ClusterIP (for internal access from CronJob)
+apiVersion: v1
+kind: Service
+metadata:
+  name: misp-server-internal
+  namespace: misp-prod
+  labels:
+    app: misp-server
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
+  selector:
+    app: misp-server

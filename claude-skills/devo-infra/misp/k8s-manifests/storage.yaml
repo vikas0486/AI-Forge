@@ -1,0 +1,53 @@
+---
+# MySQL Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-pvc
+  namespace: misp-prod
+  labels:
+    app: mysql
+    component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+# Redis Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+  namespace: misp-prod
+  labels:
+    app: redis
+    component: cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+# MISP Files Persistent Volume Claim (shared across replicas)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: misp-files-pvc
+  namespace: misp-prod
+  labels:
+    app: misp
+    component: files
+spec:
+  accessModes:
+    - ReadWriteMany  # Shared across replicas
+  storageClassName: efs-encrypted
+  resources:
+    requests:
+      storage: 50Gi

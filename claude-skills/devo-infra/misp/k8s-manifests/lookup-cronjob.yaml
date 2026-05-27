@@ -1,0 +1,81 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: misp-lookup-generator
+  namespace: misp-prod
+  labels:
+    app: misp-lookup-generator
+    component: batch
+spec:
+  schedule: "0 0 * * *"  # Daily at 00:00 UTC
+  concurrencyPolicy: Forbid  # Don't start new job if previous still running
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app: misp-lookup-generator
+        component: batch
+    spec:
+      template:
+        metadata:
+          labels:
+            app: misp-lookup-generator
+            component: batch
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: lookup-generator
+            image: docker.devo.internal/devo/misp-lookup-generator:v1.0.0
+            imagePullPolicy: Always
+            env:
+            - name: MISP_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: misp-config
+                  key: MISP_BASEURL
+            - name: MISP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: misp-admin-secret
+                  key: api-key
+            - name: DEVO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: devo-api-secret
+                  key: api-key
+            - name: DEVO_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: devo-api-secret
+                  key: api-secret
+            - name: DEVO_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: devo-api-secret
+                  key: api-url
+            - name: LOOKUP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: misp-config
+                  key: LOOKUP_NAME
+            - name: LAST_DAYS
+              valueFrom:
+                configMapKeyRef:
+                  name: misp-config
+                  key: LAST_DAYS
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+            volumeMounts:
+            - name: temp
+              mountPath: /tmp
+          volumes:
+          - name: temp
+            emptyDir:
+              sizeLimit: 5Gi

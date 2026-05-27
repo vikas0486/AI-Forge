@@ -1,0 +1,19 @@
+{
+  "skills": [
+    {
+      "name": "devo-jira",
+      "description": "Query and manage Jira and Confluence using Atlassian REST APIs. Jira: Search issues via JQL, manage issues/comments/projects. Confluence: Browse spaces, search pages with CQL, get page content, track documentation updates. On-Call Report Generator: Automated report generation from CSV alert data with P1/P2/False Positive categorization. Both use shared API token authentication.",
+      "prompts": [
+        "Search Jira issues using JQL queries and get issue details",
+        "Create/update Jira issues, add comments, manage workflow transitions",
+        "Get my assigned Jira issues and project details",
+        "Browse Confluence spaces and search pages using CQL",
+        "Get Confluence page content by ID or search by title",
+        "Track recent Confluence documentation updates",
+        "Find Confluence pages by label or space",
+        "Search both Jira and Confluence for related documentation",
+        "Generate on-call report from CSV alert data with ticket categorization and duration calculation"
+      ]
+    }
+  ]
+}

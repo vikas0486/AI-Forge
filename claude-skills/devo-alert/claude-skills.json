@@ -1,0 +1,15 @@
+{
+  "skills": [
+    {
+      "name": "devo-alert",
+      "description": "Devo Alert management — Flow/Pilot/Cockpit architecture, alert context DB schema, period staggering (anti-flooding), TAPU token manager, cross-domain injection, XSOAR duplicate alert fix.",
+      "prompts": [
+        "Troubleshoot alert not firing or duplicating",
+        "Configure period staggering to prevent alert flooding",
+        "Manage alert context in MySQL (logtrust/pilot schema)",
+        "Fix XSOAR duplicate alert issue",
+        "Manage TAPU token for cross-domain injection"
+      ]
+    }
+  ]
+}

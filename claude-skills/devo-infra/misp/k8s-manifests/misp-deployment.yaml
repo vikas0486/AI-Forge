@@ -1,0 +1,154 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: misp-server
+  namespace: misp-prod
+  labels:
+    app: misp-server
+    component: webapp
+spec:
+  replicas: 2  # Production: 2 replicas for HA
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: misp-server
+  template:
+    metadata:
+      labels:
+        app: misp-server
+        component: webapp
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for MySQL to be ready..."
+          until nc -z mysql-service 3306; do
+            echo "MySQL not ready, waiting..."
+            sleep 5
+          done
+          echo "MySQL is ready!"
+      - name: wait-for-redis
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Redis to be ready..."
+          until nc -z redis-service 6379; do
+            echo "Redis not ready, waiting..."
+            sleep 5
+          done
+          echo "Redis is ready!"
+      containers:
+      - name: misp
+        image: docker.devo.internal/devo/misp:v2.0.0
+        imagePullPolicy: Always
+        env:
+        - name: MYSQL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MYSQL_HOST
+        - name: MYSQL_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MYSQL_PORT
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: misp-mysql-secret
+              key: misp-db-password
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: REDIS_PORT
+        - name: MISP_BASEURL
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MISP_BASEURL
+        - name: MISP_ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: misp-admin-secret
+              key: admin-email
+        - name: MISP_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: misp-admin-secret
+              key: admin-password
+        - name: MISP_TIMEZONE
+          valueFrom:
+            configMapKeyRef:
+              name: misp-config
+              key: MISP_TIMEZONE
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        volumeMounts:
+        - name: misp-files
+          mountPath: /var/www/MISP/app/files
+        - name: misp-config-volume
+          mountPath: /var/www/MISP/app/Config
+        livenessProbe:
+          httpGet:
+            path: /users/login
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /users/login
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      volumes:
+      - name: misp-files
+        persistentVolumeClaim:
+          claimName: misp-files-pvc
+      - name: misp-config-volume
+        emptyDir: {}
+      restartPolicy: Always

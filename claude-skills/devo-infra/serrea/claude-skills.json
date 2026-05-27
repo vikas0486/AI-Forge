@@ -1,0 +1,7 @@
+{
+  "name": "serrea_cluster",
+  "description": "CaixaBank Serrea cluster operations and incident response: Memory leak fixes (bounded caches, connection pool optimization), HMAC error suppression, MySQL host blocking recovery, log4j configuration, rolling restarts, health monitoring, and production troubleshooting. Includes deployment automation and post-deployment verification.",
+  "version": "2.0.0",
+  "author": "Devo Operations",
+  "tags": ["serrea", "memory-leak", "bounded-caches", "hikaricp", "ehcache", "hmac", "caixabank", "mysql", "log4j", "cluster-operations", "incident-response"]
+}

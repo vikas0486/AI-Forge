@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "devo-infra",
+      "description": "Devo platform infrastructure — 6 environments (EU/US/US3/AP/Santander/GCP-TEF). Ansible roles detail: datanode, alcohol, batrasio, malote/metamalote, mason, asilo, pilot, chasys, barcenas, licor, dailytasks, myapp-loader, casperable-updater, resilient-infra, logtrust.base. Service ports, JVM/Node config, systemd units, config paths. Kubernetes EKS (4 AWS accounts, 19 clusters). Customer affinity/delegation, S3 buckets, key paths, full playbook reference.",
+      "invoke_commands": ["/devo-infra"]
+    }
+  ]
+}

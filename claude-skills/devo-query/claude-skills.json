@@ -1,0 +1,15 @@
+{
+  "skills": [
+    {
+      "name": "devo-query",
+      "description": "Maqui query execution, Malote/Metamalote troubleshooting, and customer data investigation (my.app, my.synthesis). Use for all Devo platform data queries across 7 regions. Always source ~/.zshrc && before aliases in Claude Code.",
+      "prompts": [
+        "Run a Maqui query against EU/US/APAC/US3/Santander/GCP/NCSC",
+        "Investigate customer data in my.app or my.synthesis tables",
+        "Troubleshoot Malote or Metamalote issues",
+        "Check ingestion stats or table deployment status",
+        "Query platform infrastructure tables (mason, lomana, asilo)"
+      ]
+    }
+  ]
+}

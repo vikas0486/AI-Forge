@@ -1,0 +1,15 @@
+{
+  "skills": [
+    {
+      "name": "devo-devtool",
+      "description": "Developer tooling — Jenkins CI/CD (builds, deployments, disk management), GitLab pipeline fixes (auth, loops, Vault migration), and Monitoring (Grafana, Prometheus, Alertmanager silences across all prod clusters).",
+      "prompts": [
+        "Trigger or troubleshoot a Jenkins build or deployment",
+        "Fix GitLab CI/CD pipeline failures",
+        "Create or manage Alertmanager silences",
+        "Check Grafana dashboards or Prometheus metrics",
+        "Free up disk space on Jenkins"
+      ]
+    }
+  ]
+}

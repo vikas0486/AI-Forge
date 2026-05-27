@@ -1,0 +1,179 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: misp-alerts
+  namespace: misp-prod
+  labels:
+    app: misp-server
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: misp.rules
+    interval: 30s
+    rules:
+
+    # MISP Server Health
+    - alert: MISPServerDown
+      expr: up{job="misp-server"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        component: misp-server
+      annotations:
+        summary: "MISP server is down"
+        description: "MISP server has been down for more than 5 minutes"
+
+    - alert: MISPServerHighResponseTime
+      expr: http_request_duration_seconds{job="misp-server",quantile="0.95"} > 5
+      for: 10m
+      labels:
+        severity: warning
+        component: misp-server
+      annotations:
+        summary: "MISP server response time is high"
+        description: "95th percentile response time is {{ $value }}s (threshold: 5s)"
+
+    - alert: MISPServerHighErrorRate
+      expr: rate(http_requests_total{job="misp-server",status=~"5.."}[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        component: misp-server
+      annotations:
+        summary: "MISP server high error rate"
+        description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+    # MySQL Alerts
+    - alert: MySQLDown
+      expr: up{job="mysql-exporter"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        component: mysql
+      annotations:
+        summary: "MySQL is down"
+        description: "MySQL database has been down for more than 5 minutes"
+
+    - alert: MySQLHighConnections
+      expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        component: mysql
+      annotations:
+        summary: "MySQL connections near limit"
+        description: "MySQL is using {{ $value | humanizePercentage }} of max connections"
+
+    - alert: MySQLSlowQueries
+      expr: rate(mysql_global_status_slow_queries[5m]) > 10
+      for: 5m
+      labels:
+        severity: warning
+        component: mysql
+      annotations:
+        summary: "MySQL slow queries detected"
+        description: "{{ $value }} slow queries per second detected"
+
+    - alert: MySQLHighDiskUsage
+      expr: (mysql_global_status_innodb_data_written + mysql_global_status_innodb_data_read) > 1e9
+      for: 10m
+      labels:
+        severity: warning
+        component: mysql
+      annotations:
+        summary: "MySQL high disk I/O"
+        description: "MySQL disk I/O is {{ $value | humanize }}B/s"
+
+    # Redis Alerts
+    - alert: RedisDown
+      expr: up{job="redis-exporter"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        component: redis
+      annotations:
+        summary: "Redis is down"
+        description: "Redis cache has been down for more than 5 minutes"
+
+    - alert: RedisHighMemoryUsage
+      expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        component: redis
+      annotations:
+        summary: "Redis memory usage high"
+        description: "Redis is using {{ $value | humanizePercentage }} of max memory"
+
+    - alert: RedisHighConnectionsUsage
+      expr: redis_connected_clients / redis_config_maxclients > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        component: redis
+      annotations:
+        summary: "Redis connections near limit"
+        description: "Redis is using {{ $value | humanizePercentage }} of max connections"
+
+    # Lookup Generation Alerts
+    - alert: LookupGenerationFailed
+      expr: kube_job_status_failed{job_name=~"misp-lookup-generator.*"} > 0
+      for: 1m
+      labels:
+        severity: critical
+        component: lookup-generator
+      annotations:
+        summary: "MISP lookup generation failed"
+        description: "Lookup generation job has failed"
+
+    - alert: LookupGenerationNotRun
+      expr: time() - kube_job_status_completion_time{job_name=~"misp-lookup-generator.*"} > 86400 * 2
+      for: 1h
+      labels:
+        severity: critical
+        component: lookup-generator
+      annotations:
+        summary: "MISP lookup generation not run"
+        description: "Lookup generation has not completed in over 2 days"
+
+    - alert: LookupGenerationLongRunning
+      expr: time() - kube_job_status_start_time{job_name=~"misp-lookup-generator.*"} > 7200
+      for: 1h
+      labels:
+        severity: warning
+        component: lookup-generator
+      annotations:
+        summary: "MISP lookup generation taking too long"
+        description: "Lookup generation has been running for over 2 hours"
+
+    # Resource Alerts
+    - alert: MISPHighMemoryUsage
+      expr: container_memory_usage_bytes{namespace="misp-prod",container="misp"} / container_spec_memory_limit_bytes{namespace="misp-prod",container="misp"} > 0.9
+      for: 10m
+      labels:
+        severity: warning
+        component: misp-server
+      annotations:
+        summary: "MISP container high memory usage"
+        description: "MISP is using {{ $value | humanizePercentage }} of memory limit"
+
+    - alert: MISPHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{namespace="misp-prod",container="misp"}[5m]) > 0.9
+      for: 10m
+      labels:
+        severity: warning
+        component: misp-server
+      annotations:
+        summary: "MISP container high CPU usage"
+        description: "MISP is using {{ $value | humanizePercentage }} of CPU limit"
+
+    - alert: MISPPodRestarting
+      expr: rate(kube_pod_container_status_restarts_total{namespace="misp-prod",container="misp"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+        component: misp-server
+      annotations:
+        summary: "MISP pod restarting"
+        description: "MISP pod is restarting frequently ({{ $value }} restarts in last 15 minutes)"

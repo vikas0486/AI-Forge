@@ -1,0 +1,18 @@
+# MISP Python Client
+pymisp==2.4.180
+
+# Devo SDK for lookup upload
+devo-sdk==5.1.5
+
+# Data processing
+pandas==2.1.4
+pyfaup==1.2
+
+# HTTP client
+requests==2.31.0
+
+# JSON/CSV handling
+ujson==5.9.0
+
+# Logging
+python-json-logger==2.0.7

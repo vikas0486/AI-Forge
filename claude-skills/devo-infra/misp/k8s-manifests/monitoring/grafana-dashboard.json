@@ -1,0 +1,176 @@
+{
+  "dashboard": {
+    "title": "MISP Threat Intelligence Platform",
+    "tags": ["misp", "security", "threat-intelligence"],
+    "timezone": "UTC",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "MISP Server Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"misp-server\"}",
+            "legendFormat": "Server Status"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "MySQL Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"mysql-exporter\"}",
+            "legendFormat": "MySQL Status"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Redis Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"redis-exporter\"}",
+            "legendFormat": "Redis Status"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Last Lookup Generation",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "time() - kube_job_status_completion_time{job_name=~\"misp-lookup-generator.*\"}",
+            "legendFormat": "Hours Ago"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "HTTP Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"misp-server\"}[5m])",
+            "legendFormat": "{{status}} - {{method}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Response Time (95th percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"misp-server\"}[5m]))",
+            "legendFormat": "95th percentile"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "MySQL Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "mysql_global_status_threads_connected",
+            "legendFormat": "Connected"
+          },
+          {
+            "expr": "mysql_global_variables_max_connections",
+            "legendFormat": "Max"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "MySQL Slow Queries",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_slow_queries[5m])",
+            "legendFormat": "Slow Queries/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes",
+            "legendFormat": "Used"
+          },
+          {
+            "expr": "redis_memory_max_bytes",
+            "legendFormat": "Max"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12}
+      },
+      {
+        "id": 10,
+        "title": "Pod CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{namespace=\"misp-prod\",container=\"misp\"}[5m])",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+      },
+      {
+        "id": 11,
+        "title": "Pod Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{namespace=\"misp-prod\",container=\"misp\"}",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+      },
+      {
+        "id": 12,
+        "title": "Lookup Generation Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kube_job_status_completion_time{job_name=~\"misp-lookup-generator.*\"} - kube_job_status_start_time{job_name=~\"misp-lookup-generator.*\"}",
+            "legendFormat": "Duration (seconds)"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28}
+      },
+      {
+        "id": 13,
+        "title": "Lookup Generation Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kube_job_status_succeeded{job_name=~\"misp-lookup-generator.*\"}[1d])",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28}
+      }
+    ]
+  }
+}

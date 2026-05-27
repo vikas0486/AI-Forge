@@ -1,0 +1,14 @@
+{
+  "skills": [
+    {
+      "name": "devo-database",
+      "description": "Direct MySQL/Adolfo access to Devo logtrust database. Alert context management, period staggering, domain status, installation table. For Maqui queries use /devo-query.",
+      "prompts": [
+        "Query MySQL database across EU/US/APAC/US3/Santander regions",
+        "Check domain status or installation table",
+        "Manage alert context or period staggering in DB",
+        "Run Adolfo database operations"
+      ]
+    }
+  ]
+}
