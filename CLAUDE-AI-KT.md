@@ -507,7 +507,151 @@ memory/
 - **Skill auto-suggestions** — Claude proactively suggests skill based on task without user invoking
 - **Cross-region incident correlation** — single skill that queries all 7 regions simultaneously
 - **Ansible playbook generation** — skill that drafts playbooks from natural language ops requests
+- **RAG Evolution** — see Section 11 for the full token-optimized retrieval implementation plan
 
 ---
 
-*Last updated: 2026-05-19 (v7 — final)*
+## 11. RAG Architecture: Minimum Token Consumption
+
+*The biggest cost in an LLM agent is what goes into the prompt, not what the model generates. This section defines AI FORGE's strategy to minimize input tokens while maximizing retrieval quality.*
+
+### Why Token Efficiency Matters
+
+Current "Primitive RAG" loads full `SKILL.md` files — 2,000–4,000 tokens before any task begins. At scale (many queries, many sessions), this drives API cost and latency directly. Target: retrieve only the relevant chunks, cache the static, discard what's already known.
+
+### Current Token Budget (Baseline)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              TOKEN COST — CURRENT STATE (per turn)               │
+├───────────────────────────────┬──────────────────────────────────┤
+│  Component                    │  Tokens                          │
+├───────────────────────────────┼──────────────────────────────────┤
+│  CLAUDE.md (global brain)     │  ~700  (re-sent every turn)      │
+│  MEMORY.md index              │  ~400                            │
+│  Active SKILL.md (1 skill)    │  ~2,000 (full file load)         │
+│  Referenced memory files      │  ~500 each (loaded on mention)   │
+├───────────────────────────────┼──────────────────────────────────┤
+│  Baseline before task input   │  ~3,600 tokens                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Target Token Budget (Optimized RAG)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              TOKEN COST — TARGET STATE (per turn)                │
+├───────────────────────────────┬──────────────────────────────────┤
+│  Component                    │  Tokens                          │
+├───────────────────────────────┼──────────────────────────────────┤
+│  CLAUDE.md (Bedrock cached)   │  ~0  (prompt cache hit)          │
+│  MEMORY.md index (trimmed)    │  ~200                            │
+│  Skill context (3–5 chunks)   │  ~400 (semantic retrieval)       │
+│  Memory files                 │  ~0  (fetch on demand only)      │
+├───────────────────────────────┼──────────────────────────────────┤
+│  Baseline before task input   │  ~600 tokens  (~83% reduction)   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### RAG Flow: Token-Optimized Retrieval
+
+```
+  USER QUERY
+       │
+       ▼
+  ┌──────────────────────────────────────┐
+  │  1. Prompt Cache Check               │
+  │     CLAUDE.md cached in Bedrock?     │──YES──→ 0 tokens (skip)
+  └──────────────────┬───────────────────┘
+                     │ NO → include once, mark for caching
+                     ▼
+  ┌──────────────────────────────────────┐
+  │  2. Intent Embedding                 │
+  │     Embed user query (local model)   │
+  └──────────────────┬───────────────────┘
+                     │
+                     ▼
+  ┌──────────────────────────────────────┐
+  │  3. Metadata Pre-filter              │
+  │     {region, domain, command_type}   │──→ Shrinks search space
+  └──────────────────┬───────────────────┘
+                     │
+                     ▼
+  ┌──────────────────────────────────────┐
+  │  4. Semantic Chunk Retrieval         │
+  │     Top 3–5 chunks from index        │──→ ~400 tokens injected
+  │     (ChromaDB embedded / Qdrant EKS) │
+  └──────────────────┬───────────────────┘
+                     │
+                     ▼
+  ┌──────────────────────────────────────┐
+  │  5. Dedup Check                      │
+  │     Strip context already present    │
+  │     in CLAUDE.md or prior turns      │
+  └──────────────────┬───────────────────┘
+                     │
+                     ▼
+  Claude Response (grounded, minimal context overhead)
+```
+
+### Chunking Strategy for SKILL.md Files
+
+| Chunk Type | Target Size | Content | Example |
+|---|---|---|---|
+| **Header chunk** | ~50 tokens | Skill name + trigger conditions + region scope | `devo-query: Maqui LINQ · EU/US/APAC · 7 regions` |
+| **Command chunk** | ~150–200 tokens | 1 command pattern with args + safety filter | `maquieu "select … where client='self'"` |
+| **Rule chunk** | ~100 tokens | Mandatory filter or safety constraint | `siem.logtrust.*: always where client = 'self'` |
+| **Reference chunk** | ~100 tokens | Cross-skill pointer | `For K8s after query → /devo-infra` |
+
+Each `SKILL.md` (~2,000 tokens) → ~10–15 semantic chunks → retrieve top 3–5 → **~400 tokens delivered**.
+All 11 skills combined at chunk level = ~22,000 tokens indexed; only ~400 retrieved per query.
+
+### Phase 1 Quick Win: SKILL-COMPACT.md (Zero Infrastructure)
+
+Fastest path to token reduction with no vector DB required:
+
+```
+claude-skills/
+├── devo-query/
+│   ├── SKILL.md              ← Full knowledge (load on deep-dive only)
+│   ├── SKILL-COMPACT.md      ← ≤200 token summary (loaded by default)
+│   └── claude-skills.json
+```
+
+`SKILL-COMPACT.md` format template (< 200 tokens per skill):
+
+```
+SKILL: devo-query
+TRIGGER: Maqui LINQ queries, log investigation, customer data analysis
+REGIONS: EU(maquieu) US(maquius) US3(maquius3) APAC(maquiapac) SANT(maquisant) GCP(maquigcp) NCSC(maquincsc)
+SAFETY: siem.logtrust.* → where client='self' | my.app.* → where client='<domain>'
+LOAD_FULL: invoke /devo-query when writing complex queries or needing 97 function signatures
+```
+
+All 11 skills in compact format = ~2,200 tokens total vs. ~22,000 for all full `SKILL.md` files — **a 10x reduction** available today with no new tooling.
+
+### Bedrock Prompt Caching Opportunity
+
+Bedrock supports prompt caching with a 5-minute TTL. Apply `cache_control` to the static blocks in settings:
+
+| Block | Cache-able? | Tokens Saved/turn |
+|---|---|---|
+| CLAUDE.md preamble | Yes | ~700 |
+| Safety rules + deny-list | Yes | ~200 |
+| Wrapper alias table | Yes | ~300 |
+| **Total saved** | | **~1,200 tokens/turn** |
+
+At 50 turns/day → **60,000 tokens/day saved** → ~90% cost reduction on cached sections.
+
+### Implementation Phases
+
+| Phase | Action | Token Reduction | Infrastructure | Effort |
+|---|---|---|---|---|
+| **1 (Now)** | Add `SKILL-COMPACT.md` per skill; load compact by default | ~40% | None | Low |
+| **2 (Short)** | ChromaDB embedded; chunk + index all skills; `search-skill` tool | ~80% | Local Python | Medium |
+| **3 (Medium)** | Qdrant on EKS `eu-west-1`; BM25 + dense hybrid search | ~85% | EKS StatefulSet | High |
+| **4 (Long)** | Ingest Confluence/Jira; autonomous agentic retrieval | ~85% + quality | EKS + Bedrock | High |
+
+---
+
+*Last updated: 2026-06-27 (v8 — RAG token optimization added)*
